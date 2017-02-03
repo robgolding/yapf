@@ -163,12 +163,23 @@ def main(argv):
       style_config = file_resources.GetDefaultStyleForDir(os.getcwd())
 
     source = [line.rstrip() for line in original_source]
+    diff = 0
+    if source:
+        first_line = source[0]
+        if first_line and first_line.startswith(' '):
+            new_first_line = first_line.lstrip()
+            diff = len(first_line) - len(new_first_line)
+            source = [line[diff:] for line in source]
+
     reformatted_source, _ = yapf_api.FormatCode(
         py3compat.unicode('\n'.join(source) + '\n'),
         filename='<stdin>',
         style_config=style_config,
         lines=lines,
         verify=args.verify)
+    reformatted_source = '\n'.join([
+        ' ' * diff + line for line in reformatted_source.split('\n')[:-1]
+    ])
     file_resources.WriteReformattedCode('<stdout>', reformatted_source)
     return 0
 
